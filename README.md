@@ -1,6 +1,9 @@
+> [!NOTE]  
+> Fuentes actualizados según el nuevo [External Components](https://esphome.io/components/external_components.html#external-components) de ESPHome.
+
 # ⚡Maidesite2HomeAssistant
 
-Guía sencilla para integrar tu mesa **Maidesite con Home Assistant** usando ESPHome. Aquí encontrarás todo lo necesario, desde la configuración del hardware hasta la integración final, para que puedas controlar y automatizar tu mesa de forma fácil e inteligente.
+Guía detallada para integrar tu mesa **Maidesite con Home Assistant** usando ESPHome. Aquí encontrarás todo lo necesario, desde la configuración del hardware hasta la integración final, para que puedas controlar y automatizar tu mesa de forma fácil e inteligente.
 
 > Este DIY viene inspirado en las geniales aportaciones de [shades66](https://github.com/shades66/Maidesite-standing-desk). Desde aquí todos mis kudos para él!
 
@@ -32,6 +35,7 @@ La integración de **Home Assistant con ESPHome** nos proporcionará la siguient
 - Monitorización de si estamos sentados o de pie, con contador de tiempo.
 - Bloqueo de la mesa.
 - Uso de las memorias 1 y 2 para representar la altura de pie y sentado respectivamente.
+- Y todo lo que se nos ocurra con automatizaciones ✨.
 
 ![Vista de controles disponibles desde ESPHome](resources/ha-controls.png)
 ![Vista de sensores disponibles desde ESPHome](resources/ha-sensors.png)
@@ -52,18 +56,37 @@ La alimentación del ESP32 se proporciona a través de su conector USB Type-C, e
 
 # 🕹️ ESPHome
 
-Para realizar el trabajo de firmware en nuestro ESP32, debemos añadir un nuevo dispositivo para crear un nuevo "sketch". En mi caso, lo he llamado [`maidesite-desk.yaml`](/esp32/maidesite-desk.yaml).
+Para realizar el trabajo de firmware en nuestro ESP32, debemos añadir un nuevo dispositivo para crear un nuevo "sketch". En mi caso, lo he llamado `maidesite-desk.yaml` y puedes ver su implementación [aquí](/esphome/maidesite-desk.yaml).
 
-En el archivo [`maidesite-desk.yaml`](/esp32/maidesite-desk.yaml), como se podrían haber fijado, se incluye un archivo llamado [`desk-control.h`](/esp32/desk-control.h). Este archivo contiene la clase **DeskControl**, que permite al ESP32 comunicarse con el controlador de la mesa Maidesite. A través de esta clase, el ESP32 puede ajustar la altura de la mesa y acceder a las posiciones predefinidas almacenadas en el controlador. Los valores de altura y las posiciones guardadas se envían como sensores a Home Assistant, lo que permite controlar y monitorear la mesa de manera remota.
+En este archivo YAML puedes ver cómo configurar el puerto **UART**, junto con algunos ejemplos de sensores y controles que puedes adaptar a tus necesidades. Lo más importante es la sección de **external components**, que es el nuevo estándar para componentes personalizados en ESPHome. Gracias a esto, tu mesa puede detectar los cambios en los sensores y mostrarlos directamente en Home Assistant.
+
+```yaml
+external_components:
+  - source:
+      type: git
+      url: https://github.com/rperezll/Maidesite2HomeAssistant
+      ref: main
+    components: [ desk_control ]
+    refresh: 1d # Opcional
+
+desk_control:
+  uart_id: maidesite_uart
+  height_slider: height_slider
+  sensor_m1: sensor_m1
+  sensor_m2: sensor_m2
+  sensor_m3: sensor_m3
+  sensor_m4: sensor_m4
+```  
+
+Este componente incluye la clase **DeskControl**, que permite al ESP32 comunicarse directamente con el controlador de la mesa Maidesite. Gracias a esta clase, el ESP32 puede acceder a las posiciones predefinidas que están almacenadas en el controlador. Los valores de altura y las posiciones guardadas se envían a Home Assistant como sensores, lo que hace que podamos monitorizar todo.
 
 ```
-esp32/
-│
-├── maidesite-desk.yaml (archivo principal)
-├── desk-control.h (comunicación controlador-esp32)
+📂 esphome/
+├── maidesite-desk.yaml (yaml de ejemplo para nuestro sketch)
+├── 📂 components/
+    ├── 📄 __init__.py ("Puente" que conecta el YAML con el código C++)
+    ├── 📄 desk-control.h (Archivo con las cabeceras de nuestra lógica)
+    ├── 📄 desk-control.cpp (Archivo con la lógica de nuestro componente)
 ```
 
-# ✨ Futuras exploraciones
-
-- Guardar posiciones en los slots de memoria, actualmente solo es posible desde el controlador de Maidesite.
-- Explorar la funcionalidad de alarma, que permite activar la vibración en el controlador de Maidesite.
+Puedes ver la documentación del anterior scaffolding [aquí](https://esphome.io/components/external_components.html#example-of-local-components).

@@ -65,14 +65,13 @@ globals:
     type: int
     initial_value: "0"
 
-# external_components:
-#   - source:
-#       type: local
-#       path: components
-
 external_components:
-  - source: github://rperezll/Maidesite2HomeAssistant@main
+  - source:
+      type: git
+      url: https://github.com/rperezll/Maidesite2HomeAssistant
+      ref: main
     components: [ desk_control ]
+    refresh: 1d
 
 desk_control:
   uart_id: maidesite_uart
@@ -169,12 +168,12 @@ switch:
     id: desk_enabled
     lambda: return id(desk_switch_state);
     turn_on_action:
-      - logger.log: "🟢 La mesa está operativa esperando ordenes."
+      - logger.log: "🟢 Desk is now unlocked and operational."
       - globals.set:
           id: desk_switch_state
           value: "true"
     turn_off_action:
-      - logger.log: "🔴 La mesa está bloqueada y no operativa."
+      - logger.log: "🔴 Desk is now locked and non-operational."
       - globals.set:
           id: desk_switch_state
           value: "false"
@@ -190,7 +189,7 @@ button:
         condition:
           switch.is_on: desk_enabled
         then:
-          - logger.log: "⚡ UP"
+          - logger.log: "⚡ UP desk"
           - uart.write: [0xf1, 0xf1, 0x01, 0x00, 0x01, 0x7e]
 
   - platform: template
@@ -202,7 +201,7 @@ button:
         condition:
           switch.is_on: desk_enabled
         then:
-          - logger.log: "⚡ DOWN"
+          - logger.log: "⚡ DOWN desk"
           - uart.write: [0xf1, 0xf1, 0x02, 0x00, 0x02, 0x7e]
 
   - platform: template
@@ -214,7 +213,7 @@ button:
         condition:
           switch.is_on: desk_enabled
         then:
-          - logger.log: "⚡ Posición sentado"
+          - logger.log: "⚡ Sitting position"
           - uart.write: [0xf1, 0xf1, 0x05, 0x00, 0x05, 0x7e]
 
   - platform: template
@@ -226,8 +225,21 @@ button:
         condition:
           switch.is_on: desk_enabled
         then:
-          - logger.log: "⚡ Posición de pie"
+          - logger.log: "⚡ Stand position"
           - uart.write: [0xf1, 0xf1, 0x06, 0x00, 0x06, 0x7e]
+
+  - platform: template
+    name: Vibrate
+    id: button_vibrate
+    disabled_by_default: True
+    icon: mdi:test-tube
+    on_press:
+      if:
+        condition:
+          switch.is_on: desk_enabled
+        then:
+          - logger.log: "⚡ Vibrate desk button pressed!"
+          - uart.write: [0xf1, 0xf1, 0x10, 0x00, 0x10, 0x7e]
           
   - platform: template
     name: Test

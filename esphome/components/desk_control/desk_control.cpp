@@ -16,8 +16,6 @@ namespace esphome {
         // Leemos un byte del mensaje recibido por UART.
         uint8_t c = this->read();
 
-        ESP_LOGD(TAG, "🔥 Byte recibido UART: 0x%02X", c);
-
         switch (state) {
           // Esperamos el primer byte "mágico" que indica el inicio de un nuevo mensaje válido.
           case WAIT_FOR_BYTE_1:
